@@ -1,0 +1,12 @@
+//The following query checks Syslog messages to detected if there is failed authentication count from an IP is greater than 20
+// Sample Syslog messages
+//154361: Feb 13 14:38:30: %SEC_LOGIN-1-QUIET_MODE_ON: Still timeleft for watching failures is 0 secs, [user: user] [Source: 182.176.108.79] [localport: 22] [Reason: Login Authentication Failed] [ACL: sl_def_acl] at 14:38:30 IST Tue Feb 13 2024
+//154360: Feb 13 14:38:28: %SEC_LOGIN-1-QUIET_MODE_ON: Still timeleft for watching failures is 43 secs, [user: admin] [Source: 182.176.108.79] [localport: 22] [Reason: Login Authentication Failed] [ACL: sl_def_acl] at 14:38:28 IST Tue Feb 13 2024
+//154364: Feb 13 14:39:04: %SEC_LOGIN-1-QUIET_MODE_ON: Still timeleft for watching failures is 0 secs, [user: root] [Source: 182.176.108.79] [localport: 22] [Reason: Login Authentication Failed] [ACL: sl_def_acl] at 14:39:04 IST Tue Feb 13 2024
+//This can be used to create an Analytic rule which executes every 5 mins and look for every for past 5 mins.
+Syslog
+| where SyslogMessage contains "Login Authentication Failed"
+| parse-where SyslogMessage with * "user:" User "] [Source:" Source "] [localport:" Port "]" *
+| project-away SyslogMessage
+| summarize FailedLogincount = count() by Source, User
+| extend IsAttack = iff ((FailedLogincount >20), "Attack", "Ignore")
