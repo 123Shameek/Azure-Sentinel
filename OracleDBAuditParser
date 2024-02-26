@@ -1,0 +1,37 @@
+//Parser to parse Oracle DB Audit logs which are ingested as syslog
+//Following are few sample logs
+//LENGTH: "430" SESSIONID:[7] "5629701" ENTRYID:[1] "1" STATEMENT:[1] "1" USERID:[12] "GCR_CMS_SYNC" USERHOST:[10] "vklnld3052" TERMINAL:[7] "unknown" ACTION:[3] "100" RETURNCODE:[1] "0" COMMENT$TEXT:[138] "Authenticated by: DATABASE AUTHENTICATED IDENTITY: GCR_CMS_SYNC Client address: (ADDRESS=(PROTOCOL=tcp)(HOST=10.241.141.119)(PORT=35874))" OS$USERID:[7] "gcruser" DBID:[10] "1870099777" PRIV$USED:[1] "5" CURRENT_USER:[12] "GCR_CMS_SYNC"
+//LENGTH: "430" SESSIONID:[7] "5629701" ENTRYID:[1] "1" STATEMENT:[1] "1" USERID:[12] "GCR_CMS_SYNC" USERHOST:[10] "vklnld3052" TERMINAL:[7] "unknown" ACTION:[3] "100" RETURNCODE:[1] "0" COMMENT$TEXT:[138] "Authenticated by: DATABASE AUTHENTICATED IDENTITY: GCR_CMS_SYNC Client address: (ADDRESS=(PROTOCOL=tcp)(HOST=10.241.141.119)(PORT=35874))" OS$USERID:[7] "gcruser" DBID:[10] "1870099777" PRIV$USED:[1] "5" CURRENT_USER:[12] "GCR_CMS_SYNC"
+//LENGTH: "430" SESSIONID:[7] "5629706" ENTRYID:[1] "1" STATEMENT:[1] "1" USERID:[12] "GCR_CMS_SYNC" USERHOST:[10] "vklnld3052" TERMINAL:[7] "unknown" ACTION:[3] "100" RETURNCODE:[1] "0" COMMENT$TEXT:[138] "Authenticated by: DATABASE AUTHENTICATED IDENTITY: GCR_CMS_SYNC Client address: (ADDRESS=(PROTOCOL=tcp)(HOST=10.241.141.119)(PORT=35924))" OS$USERID:[7] "gcruser" DBID:[10] "1870099777" PRIV$USED:[1] "5" CURRENT_USER:[12] "GCR_CMS_SYNC"
+Syslog
+| where Facility == "local0"
+| where ProcessName == "Oracle"
+| parse-where SyslogMessage with * 'LENGTH: "' Length 
+'" SESSIONID:[' * 
+'] "' SessionID
+'" ENTRYID:[' *
+'] "' EntryID
+'" STATEMENT:[' *
+' "' Statement
+'" USERID:[' *
+'] "' UserID
+'" USERHOST:[' *
+'] "' UserHost
+'" TERMINAL:[' *
+'] "' Terminal
+'" ACTION:[' *
+'] "' Action
+'" RETURNCODE:[' *
+'] "' ReturnCode
+'" COMMENT$TEXT' *
+'Authenticated by:' AuthenticatedBy
+'AUTHENTICATED IDENTITY:' AuthenticatedIdentity
+'Client address:' ClientAddress
+'DBID:[' *
+'] "' DbID
+'" PRIV$USED:[' *
+'] "' PrivUsed
+'" CURRENT_USER:[' *
+'] "' CurrentUser
+'"' *
+| project-away SyslogMessage
