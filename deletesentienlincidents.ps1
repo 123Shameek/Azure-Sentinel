@@ -1,4 +1,4 @@
-//The following script bulk deletes all closed Sentinel incidents older than a certain date
+/*The following script bulk deletes all closed Sentinel incidents older than a certain date*/
 
 $Days=<days>
 $RG="<Resource Group Name>"
