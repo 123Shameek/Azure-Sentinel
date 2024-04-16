@@ -1,7 +1,7 @@
 /*PowerShell script to Delete a specific extension on all the VMs in a subsription*/
 $VM=(Get-AzVM).Name 
 $RG = (Get-AzResourceGroup).ResourceGroupName 
-$Extension = <ExtensionName>
+$Extension = "<ExtensionName>"
 foreach($r in $RG) 
 {
 	foreach ($i in $VM) 
