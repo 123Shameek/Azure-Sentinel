@@ -1,0 +1,8 @@
+//KQL query to check the amount of data ingested per day which is not covered under MDFC 500 MB benefit
+//The following article mentiones the tables which are included in 500 MB benefit
+// https://learn.microsoft.com/en-us/azure/defender-for-cloud/faq-defender-for-servers#what-data-types-are-included-in-the-daily-allowance-
+Usage
+| where IsBillable == true
+| where DataType !in ("SecurityAlert", "SecurityBaseline", "SecurityBaselineSummary", "SecurityDetection", "SecurityEvent", "WindowsFirewall", "ProtectionStatus", "Update", "UpdateSummary", "MDCFileIntegrityMonitoringEvents")
+| summarize sum(Quantity) by bin(TimeGenerated, 1d)
+| order by TimeGenerated
