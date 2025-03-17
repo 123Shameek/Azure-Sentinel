@@ -1,0 +1,13 @@
+//KQL query to demonstrate parse json and case operators
+// continue to add all the json tags
+
+let Data = datatable(Date:datetime, MoreData:string) [
+    datetime(1910-06-11), '{"keyUsage":"ENCRYPT_DECRYPT","bypassPolicyLockoutSafetyCheck":false,"keySpec":"SYMMETRIC_DEFAULT","customerMasterKeySpec":"SYMMETRIC_DEFAULT","tags":[{"tagKey":"owner_cost_center","tagValue":"1999-31004-1001"},{"tagKey":"terraform_project","tagValue":"https://githubifc.iad.ca.inet/AIengineering/fnol-terraform"},{"tagKey":"project","tagValue":"PR0000010282 - 2022-2024 AI Claims"},{"tagKey":"chargeback_cost_center","tagValue":"1999-31004-1001"},{"tagKey":"technical_contact","tagValue":"ai-claims-auto-pd-support@intactfc.onmicrosoft.com"},{"tagKey":"managed_by_terraform","tagValue":"true"},{"tagKey":"application_name","tagValue":"fnol-pilot"},{"tagKey":"tenant_owner","tagValue":"sonia.cournoyer@intact.net"},{"tagKey":"system_availability","tagValue":"none"},{"tagKey":"secondary_owner","tagValue":"blair.macnab@intact.net"},{"tagKey":"cost_center","tagValue":"1999-31004-1001"},{"tagKey":"project_id","tagValue":"PR0000010282"},{"tagKey":"env_type","tagValue":"DEV"},{"tagKey":"domain","tagValue":"claims"},{"tagKey":"owner_group","tagValue":"datalab"},{"tagKey":"environment","tagValue":"nprod"},{"tagKey":"operational_level","tagValue":"non-operational"},{"tagKey":"creation_date","tagValue":"2024-09-17"},{"tagKey":"data_confidentiality","tagValue":"C2"}],"description":"KMS key for kenesis","origin":"AWS_KMS"}',
+];
+Data
+| extend Tags = parse_json(MoreData)
+| extend T1 = case(Tags.tags[0].tagKey contains "owner", "Tag0",
+Tags.tags[1].tagKey contains "owner", "Tag1",
+Tags.tags[2].tagKey contains "owner", "Tag2",
+Tags.tags[3].tagKey contains "owner", "Tag3",
+"Tag4")
