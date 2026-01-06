@@ -1,0 +1,12 @@
+//KQL query to find the time to triage for SecurityIncidents
+
+SecurityIncident
+| order by IncidentNumber asc, TimeGenerated asc
+| extend rn = row_number(1, prev(IncidentNumber) != IncidentNumber)
+| where rn <= 2
+| summarize 
+      FirstEventTime = arg_min(rn, TimeGenerated),
+      SecondEventTime = arg_max(rn, TimeGenerated)
+      by IncidentNumber
+| extend TimeToTriage = datetime_diff('minute',TimeGenerated1,TimeGenerated)
+| project IncidentNumber,TimeToTriage
