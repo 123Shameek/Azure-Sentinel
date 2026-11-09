@@ -1,0 +1,37 @@
+let LookbackPeriod = 1d;
+// 1. One row per incident: when it was first generated, plus its latest details
+let Incidents =
+   SecurityIncident
+   | where CreatedTime >= ago(LookbackPeriod)
+   | summarize IncidentTimeGenerated = min(TimeGenerated),      // first record = incident generated
+               arg_max(TimeGenerated, IncidentNumber, Title, AlertIds)
+               by IncidentName
+   | project-away TimeGenerated
+   | mv-expand AlertId = AlertIds to typeof(string);            // one row per linked alert
+// 2. One row per alert: when it was first generated, plus its latest details
+let Alerts =
+   SecurityAlert
+   | where TimeGenerated >= ago(LookbackPeriod + 7d)            // alerts can predate the incident
+   | summarize AlertTimeGenerated = min(TimeGenerated),
+               arg_max(TimeGenerated, AlertName, AlertSeverity, ProviderName, StartTime)
+               by SystemAlertId
+   | project-away TimeGenerated;
+// 3. Match incidents to their alerts
+let IncidentAlerts = materialize(
+   Incidents
+   | join kind=leftouter Alerts on $left.AlertId == $right.SystemAlertId
+   | project IncidentNumber, IncidentTitle = Title, IncidentTimeGenerated,
+             AlertId, AlertName, AlertSeverity, ProviderName,
+             AlertStartTime = StartTime, AlertTimeGenerated);
+// 4. Earliest alert StartTime per incident, and the time differences
+IncidentAlerts
+| summarize FirstAlertStartTime = min(AlertStartTime) by IncidentNumber
+| join kind=inner IncidentAlerts on IncidentNumber
+| extend
+   // First alert StartTime -> incident TimeGenerated (same value for the whole incident)
+   TimeToIncidentfromAlertStartTime = datetime_diff("minute", IncidentTimeGenerated, FirstAlertStartTime),
+   // NEW: this alert's TimeGenerated -> incident TimeGenerated (per alert)
+   TimeToIncidentfromAlertGeneratedTime = datetime_diff("minute", IncidentTimeGenerated, AlertTimeGenerated)
+| project IncidentNumber, IncidentTimeGenerated, AlertStartTime, AlertTimeGenerated,
+         TimeToIncidentfromAlertStartTime, 
+         TimeToIncidentfromAlertGeneratedTime
